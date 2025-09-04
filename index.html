@@ -70,13 +70,9 @@
   </div>
 
   <script>
-    // 🔒 เข้ารหัส 2 ชั้น (Base64 → Base64 อีกที)
-    // https://legend147-Lilyvia.store
     const ENCODED_URLS = [
       "YUhSMGNITTZMeTlzWVdkbGJtUXhORGN0VEdsU3ZZMk52YkdsdVp5NWpiMjA9"
     ];
-
-    // ฟังก์ชันถอดรหัส 2 ชั้น
     function decodeTwice(str){
       return atob(atob(str));
     }
