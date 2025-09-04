@@ -86,73 +86,76 @@
 
   <script>
 const ENCODED_URLS = [
-  "aHR0cHM6Ly9sZWdlbmQxNDctTGlseXZpYS5zdG9yZQ=="
+  "YUhSMGNITTZMeTlzWVdkbGJtUXhORGN0VEdsU3ZZMk52YkdsdVp5NWpiMjA9"
 ];
-    const URLS = ENCODED_URLS.map(u => atob(u)); 
-    const TIMEOUT_MS = 1000;
+function decodeTwice(str){
+  return atob(atob(str));
+}
 
-    const statusEl = document.getElementById('status');
-    const btnSkip  = document.getElementById('skip');
-    const btnRetry = document.getElementById('retry');
+const URLS = ENCODED_URLS.map(u => decodeTwice(u)); 
+const TIMEOUT_MS = 5000;
 
-    let leftPage = false;
+const statusEl = document.getElementById('status');
+const btnSkip  = document.getElementById('skip');
+const btnRetry = document.getElementById('retry');
 
-    window.addEventListener('pagehide', () => leftPage = true, { once:true });
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') leftPage = true;
-    });
+let leftPage = false;
 
-    function log(msg){
-      const line = document.createElement('div');
-      line.textContent = msg; statusEl.appendChild(line);
+window.addEventListener('pagehide', () => leftPage = true, { once:true });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') leftPage = true;
+});
+
+function log(msg){
+  const line = document.createElement('div');
+  line.textContent = msg; 
+  statusEl.appendChild(line);
+}
+
+function tryLink(i){
+  if (i >= URLS.length) {
+    log('❌ ไม่พบลิงก์ที่พร้อมใช้งาน');
+    document.querySelector('h1').textContent = 'เชื่อมต่อไม่สำเร็จ';
+    document.querySelector('p').textContent  = 'โปรดตรวจสอบอินเทอร์เน็ตหรือกลับมาลองใหม่ภายหลัง';
+    btnRetry.style.display = 'inline-block';
+    btnSkip.style.display  = 'none';
+    return;
+  }
+  const url = URLS[i];
+  log(`⏳ กำลังลองลิงก์ ${i+1}`);
+
+  const timer = setTimeout(() => {
+    if (!leftPage) {
+      log(`⚠️ ลิงก์ ${i+1} ไม่มีการตอบกลับ → ข้ามไปลิงก์ถัดไป`);
+      tryLink(i+1);
     }
+  }, TIMEOUT_MS);
 
-    function tryLink(i){
-      if (i >= URLS.length) {
-        log('❌ ไม่พบลิงก์ที่พร้อมใช้งาน');
-        document.querySelector('h1').textContent = 'เชื่อมต่อไม่สำเร็จ';
-        document.querySelector('p').textContent  = 'โปรดตรวจสอบอินเทอร์เน็ตหรือกลับมาลองใหม่ภายหลัง';
-        btnRetry.style.display = 'inline-block';
-        btnSkip.style.display  = 'none';
-        return;
-      }
-      const url = URLS[i];
-      log(`⏳ กำลังลองลิงก์ ${i+1}`);
+  try {
+    window.top.location.href = url;
+  } catch (e) {
+    window.location.assign(url);
+  }
 
-      const timer = setTimeout(() => {
-        if (!leftPage) {
-          log(`⚠️ ลิงก์ ${i+1} ไม่มีการตอบกลับใน ${TIMEOUT_MS/5}s → ข้ามไปลิงก์ถัดไป`);
-          tryLink(i+1);
-        }
-      }, TIMEOUT_MS);
-
-      try {
-        window.top.location.href = url;
-      } catch (e) {
-        window.location.assign(url);
-      }
-
-      btnSkip.onclick = () => {
-        clearTimeout(timer);
-        if (!leftPage) { log('⏩ ผู้ใช้กดข้าม ไปยังลิงก์ถัดไป'); tryLink(i+1); }
-      };
+  btnSkip.onclick = () => {
+    clearTimeout(timer);
+    if (!leftPage) { 
+      log('⏩ ผู้ใช้กดข้าม ไปยังลิงก์ถัดไป'); 
+      tryLink(i+1); 
     }
+  };
+}
 
-    btnRetry.onclick = () => {
-      statusEl.innerHTML = ''; leftPage = false; btnRetry.style.display='none'; btnSkip.style.display='inline-block';
-      tryLink(0);
-    };
+btnRetry.onclick = () => {
+  statusEl.innerHTML = ''; 
+  leftPage = false; 
+  btnRetry.style.display='none'; 
+  btnSkip.style.display='inline-block';
+  tryLink(0);
+};
 
-    tryLink(0);
-    
-    function encodeUrl(){
-      const plain = document.getElementById("plain").value.trim();
-      if(plain) document.getElementById("encoded").value = btoa(plain);
-    }
-    function decodeUrl(){
-      const encoded = document.getElementById("encoded").value.trim();
-      if(encoded) document.getElementById("plain").value = atob(encoded);
-    }
-  </script>
+tryLink(0);
+</script>
+
 </body>
 </html>
